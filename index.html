@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Parrot</title>
+    <style>
+        *{
+            box-sizing: border-box;
+
+            margin: 0;
+            padding: 0;
+        }
+
+        body{
+            width: 100%;
+            overflow-x: hidden;
+            font-size: 30px;
+            font-family: Arial, sans-serif; /** 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; **/
+            background-color: #ffe9d1;
+            color: #f37a2e;
+
+        }
+
+        header,
+        main{
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        header{
+            text-align: center;
+            margin: 3rem 0;
+        }
+
+        main{
+            max-width: 1300px;
+            margin: 0 auto;
+            position: relative;;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+        }
+
+        @media screen and (max-width: 840px){
+            main{
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+        }
+
+        #start{
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            padding: 3rem 0;
+            z-index: 2;
+        }
+
+        @media screen and (max-width: 840px){
+            #start{
+                background-color: rgba(245, 222, 179, 0.9);
+                padding-bottom: 5rem;
+            }
+        }
+
+
+        #start button{
+            cursor: pointer;
+            outline: none;
+            background: none;
+            border: none;
+            text-shadow: 1px 1px 1px #aaa;
+            box-shadow:0 0 4px rgba(0,0,0,0.2);
+            background-color: #f37a2e;
+            border-radius: 40px;
+            padding: 0.5em 1em;
+            color: #fff;
+            font-size: 2.4rem;
+        }
+
+        #start p{
+            color: rgb(77, 77, 77);
+            font-size: 1rem;
+            max-width: 280px;
+            margin: 2rem auto;
+            line-height: 1.3;
+        }
+
+        #speech-bubble{
+            width: 100%;
+            height: auto;
+            text-align: right;
+        }
+
+        @media screen and (max-width: 840px){
+            #speech-bubble{
+                text-align: left;
+            }
+        }
+
+        #speech-bubble p{
+            display: inline-block;
+            padding: 1rem 2rem;
+            color: rgb(77, 77, 77);
+            border: 3px solid rgb(77, 77, 77);
+            background: #fff;
+            border-radius: 20px;
+            border-bottom-right-radius: 0;
+
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        #speech-bubble  p.show-text{
+            opacity: 1;
+        }
+
+
+        #parrot{
+            width: 100%;
+            max-width: 320px;
+            height: auto;
+        }
+
+        #speaker{
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: auto;
+            z-index: 2;
+        }
+
+        /** speaker cone **/
+        #speaker .speaker-cone{
+            fill: rgb(77, 77, 77);
+            transition: fill 0.2s ease;
+        }
+
+        #speaker.muted .speaker-cone{
+            fill: rgb(232, 70, 90);
+        }
+
+        /** op transition for soundwaves/mute line **/
+        #speaker .soundwave,
+        #speaker .mute-line{
+            fill: rgb(77, 77, 77);
+
+            transition: opacity 0.2s ease;
+        }
+
+        #speaker.muted .mute-line,
+        #speaker .soundwave{
+            opacity: 1;
+        }
+
+        #speaker.muted .soundwave,
+        #speaker .mute-line{
+            opacity: 0;
+        }
+
+
+        @media screen and (max-width: 600px){
+
+            h1{
+                font-size: 2rem;
+                margin-bottom: 0.6rem;
+            }
+
+
+            h1 + p{
+                font-size: 1.3rem;
+            }
+
+            #speech-bubble{
+                text-align: center;
+            }
+
+            #speech-bubble p{
+                border-bottom-right-radius: 20px;
+                margin-bottom: 1rem;
+                font-size: 1.4rem;
+            }
+        }
+
+        @media screen and (max-width: 400px){
+            h1{
+                font-size: 1.6rem;
+                margin-bottom: 0.4rem;
+            }
+
+
+            h1 + p{
+                font-size: 1rem;
+            }
+
+            #speech-bubble p{
+                font-size: 1rem;
+            }
+        }
+
+
+
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Pumpkin the Parrot</h1>
+        <p>Speaks back everything you say!</p>
+    </header>
+
+    <main>
+        <div id="start">
+            <button id="startbtn">Start</button>
+            <p>Clicking the start button will attempt to use your microphone.</p><p>The browser will ask for permission if you haven&rsquo;t already granted it.</p>
+        </div>
+
+        <div id="speech-bubble">
+            <p id="speech-result"></p>
+        </div>
+
+        <svg id="parrot" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 427.613 427.613">
+            <path d="M222.019 121.575c8.94 0 16.22 7.28 16.22 16.23 0 8.94-7.28 16.22-16.22 16.22-8.95 0-16.23-7.28-16.23-16.22 0-8.95 7.28-16.23 16.23-16.23zm7.31 17.87c1.52-6.63-6.33-11.7-11.78-7.67-2.62 1.94-3.7 5.49-2.59 8.55 1.06 2.95 3.92 4.97 7.06 4.97 3.48 0 6.53-2.48 7.31-5.85z" fill="#f2f2f2"/>
+            <path d="M295.959 68.495l-4.48 6.35c-9.28-6.55-19.21-12.15-29.64-16.64a164.107 164.107 0 0 0-37.67-11.1l1.32-7.72c25.71 3.44 49.9 13.44 70.47 29.11z" fill="#f2f2f2"/>
+            <path d="M274.549 16.615c9.17 3.8 13.54 14.35 9.74 23.52l-1.01 2.44c-10.6-5.69-21.79-10.2-33.4-13.44l1.15-2.77c3.8-9.17 14.35-13.54 23.52-9.75z" fill="#86a9f7"/>
+            <path d="M282.829 87.095l-8.53 12.08a168.536 168.536 0 0 0-54.66-25.75l1.99-11.54c11.77 1.98 23.27 5.35 34.27 10.09a149.6 149.6 0 0 1 26.93 15.12z" fill="#5b79ce"/>
+            <path d="M168.689 145.415v23.7h-96.16c3.32-1.73 7.01-3.53 11.09-5.33 17.99-7.92 46.98-17.27 85.07-18.37z" fill="#eae196"/>
+            <path d="M168.689 82.765v47.64c-56.02 1.5-94.24 19.49-113.14 31.01 7.29-44.55 46.03-78.65 92.61-78.65h20.53z" fill="#eae196"/>
+            <path d="M363.139 358.115h-25.21c-2.3 0-4.58-.07-6.85-.16l-27.97-73.36c-9.85-25.83-27.09-47.78-49.85-63.47-20.7-14.26-44.62-22.39-69.57-23.75V82.945c81.58 3.92 146.74 71.52 146.74 154.06v32.71c0 32.36 11.79 63.92 32.71 88.4zm-109.9-220.31c0-17.22-14.01-31.23-31.22-31.23-17.22 0-31.23 14.01-31.23 31.23 0 17.21 14.01 31.22 31.23 31.22 17.21 0 31.22-14.01 31.22-31.22z" fill="#ff8a49"/>
+            <path d="M289.089 289.945l25.31 66.37c-71.17-10.94-126.45-70.7-130.47-143.9 21.81 1.38 42.7 8.58 60.82 21.06 20.25 13.96 35.58 33.48 44.34 56.47z" fill="#00b0ff"/>
+            <path d="M386.019 360.215a7.468 7.468 0 0 1 1.75 8.2 7.508 7.508 0 0 1-6.95 4.7h-42.89c-23.06 0-45.06-4.65-65.12-13.04v40.13c6.21 1.39 11.92 4.51 16.53 9.12l1.25 1.24a7.52 7.52 0 0 1 0 10.61 7.512 7.512 0 0 1-5.31 2.19c-1.92 0-3.84-.73-5.3-2.19l-1.25-1.25a18.866 18.866 0 0 0-13.42-5.56h-36.64c-.09.02-.14.13-.13.18 2.92 2.93 2.95 7.69.02 10.62-1.47 1.46-3.39 2.2-5.3 2.2s-3.82-.73-5.28-2.19a15.065 15.065 0 0 1-3.28-16.47c2.35-5.67 7.83-9.34 13.97-9.34h29.14v-46.45c-53.01-28.62-89.12-84.69-89.12-149.05v-19.75H46.799c-4.14 0-7.5-3.35-7.5-7.5 0-60.02 48.83-108.85 108.86-108.85h28.03c9.81 0 19.43.84 28.79 2.46l6.94-40.41a7.495 7.495 0 0 1 8.27-6.17l4.77.56c3.39.4 6.76.92 10.1 1.53l2.11-5.11c6.96-16.81 26.31-24.82 43.12-17.86 16.81 6.96 24.82 26.3 17.86 43.11l-1.85 4.47c5.07 3.37 9.97 7.01 14.68 10.95a7.509 7.509 0 0 1 1.31 10.08l-26.17 37.06c36.28 31.06 59.31 77.17 59.31 128.57v32.71c0 16.3 3.36 32.38 9.66 47.21 6.3 14.83 15.53 28.41 27.26 39.74l3.67 3.55zm-48.09-2.1h25.21c-20.92-24.48-32.71-56.04-32.71-88.4v-32.71c0-82.54-65.16-150.14-146.74-154.06v114.43c24.95 1.36 48.87 9.49 69.57 23.75 22.76 15.69 40 37.64 49.85 63.47l27.97 73.36c2.27.09 4.55.16 6.85.16zm-23.53-1.8l-25.31-66.37c-8.76-22.99-24.09-42.51-44.34-56.47-18.12-12.48-39.01-19.68-60.82-21.06 4.02 73.2 59.3 132.96 130.47 143.9zm-22.92-281.47l4.48-6.35c-20.57-15.67-44.76-25.67-70.47-29.11l-1.32 7.72c12.93 2.18 25.58 5.89 37.67 11.1 10.43 4.49 20.36 10.09 29.64 16.64zm-7.19-34.71c3.8-9.17-.57-19.72-9.74-23.52-9.17-3.79-19.72.58-23.52 9.75l-1.15 2.77c11.61 3.24 22.8 7.75 33.4 13.44l1.01-2.44zm-9.99 59.04l8.53-12.08a149.6 149.6 0 0 0-26.93-15.12c-11-4.74-22.5-8.11-34.27-10.09l-1.99 11.54c19.89 5.29 38.35 14.1 54.66 25.75zm-105.61 69.94v-23.7c-38.09 1.1-67.08 10.45-85.07 18.37-4.08 1.8-7.77 3.6-11.09 5.33h96.16zm0-38.71v-47.64h-20.53c-46.58 0-85.32 34.1-92.61 78.65 18.9-11.52 57.12-29.51 113.14-31.01z" fill="#4d4d4d"/>
+            <path d="M222.019 106.575c17.21 0 31.22 14.01 31.22 31.23 0 17.21-14.01 31.22-31.22 31.22-17.22 0-31.23-14.01-31.23-31.22 0-17.22 14.01-31.23 31.23-31.23zm16.22 31.23c0-8.95-7.28-16.23-16.22-16.23-8.95 0-16.23 7.28-16.23 16.23 0 8.94 7.28 16.22 16.23 16.22 8.94 0 16.22-7.28 16.22-16.22z" fill="#4d4d4d"/>
+            <path d="M217.549 131.775c5.45-4.03 13.3 1.04 11.78 7.67-.78 3.37-3.83 5.85-7.31 5.85-3.14 0-6-2.02-7.06-4.97-1.11-3.06-.03-6.61 2.59-8.55z" fill="#4d4d4d"/>
+        </svg>
+    </main>
+    <svg id="speaker" class="muted" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+        <path class="soundwave" d="M444.8 76.8c-6.8-9-19.7-10.9-28.8-4.2-9.1 6.7-11 19.4-4.2 28.4 64.8 85.9 64.8 225.6 0 311.5-6.8 9-5.1 21.9 4.2 28.4 11.4 7.9 24.8 1.2 28.8-4.2 74.9-99.1 74.9-260.6 0-359.9z"/>
+        <path class="soundwave" d="M394.7 143.2c-6.8-9-19.7-10.8-28.8-4.2-9.1 6.7-11 19.4-4.2 28.4 36.6 48.4 36.6 130.3 0 178.7-6.8 9-5 21.8 4.2 28.4 11.7 8.3 24.8 1.2 28.8-4.2 48.1-63.6 48.1-163.4 0-227.1z"/>
+        <path class="speaker-cone" d="M291.9 438.3L147.7 325.9V187.7L291.9 75.4v362.9zM106.5 315.5H52.2V197.8h54.3v117.7zM301.2 15.3L121.1 157.2H31.6c-11.4 0-20.6 9.1-20.6 20.3v158.2c0 11.2 9.2 20.3 20.6 20.3h91.2l178.4 140.7c12.8 10.1 31.9 1.1 31.9-15.1V30.4c0-16.2-19-25.3-31.9-15.1z"/>
+        <line class="mute-line" x1="0" y1="512" x2="512" y2="0" style="stroke:rgb(232, 70, 90);stroke-width:50"/>
+    </svg>
+    <script>
+        let recognition;
+        let speechSynth;
+        let canPlayAudio = false;
+
+        /**
+         * We can only play audio to the user if they wish to have it.
+         * The app starts off with the audio muted and only if the user
+         * clicks on the speaker icon, will we then play the speech synth
+         * output to them.
+         */
+        const speakerBtn = document.getElementById('speaker');
+        speakerBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            canPlayAudio = !canPlayAudio;
+            speakerBtn.classList.toggle('muted');
+        });
+
+
+
+        const startBtn = document.getElementById('startbtn');
+        startBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            //remove start div as now not needed
+            e.target.parentElement.remove();
+
+            startSpeechRecognition(); //starts our speech recognition loop
+        });
+
+
+        /**
+         * This is our speech recognition/response loop.
+         *
+         * In tests on Chrome, even in continous mode, the browser will kill the speech recognition
+         * after a period of no speech detection.  To combat this, we will repeatidly attempt to
+         * start the speech recognition service.
+         *
+         * When attempting to start the speech recognition service, if the service
+         * is already running it will throw an exception.  We can use this exception to then
+         * recall this function to try again until it's successfullu started.
+         */
+        function startSpeechRecognition(){
+            try{
+                window.SpeechRecognition = window.SpeechRecognition ||  window.webkitSpeechRecognition;
+
+                speechSynth = window.speechSynthesis;
+
+                recognition = new SpeechRecognition();
+                recognition.lang = 'en-US';
+                recognition.continuous = true;
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 1;
+
+                try{
+
+                    recognition.start();
+                    recognition.onresult = (e) => {
+                        const userSpeech = e.results[e.results.length -1][0].transcript; //service stores history of all our results, grab the latest
+
+                        squack(userSpeech);
+
+
+
+                    };
+                }catch(e){ // already started, try again
+                    window.setTimeout(1000, startSpeechRecognition);
+                }
+
+                /**
+                 * There's no easy way to detect when the
+                 * browser has killed the session and stopped
+                 * listening in on the mic.
+                 *
+                 * So attempt to restart the session on
+                 * each audioend event.
+                 *
+                 * [Fired when the user agent has finished capturing audio].
+                 **/
+                recognition.onaudioend = () => {
+                    startSpeechRecognition();
+                };
+            }catch(e){
+                squack('Sorry, speech recognition is not available for this browser');
+
+
+            }
+        }
+
+        /**
+         * Makes pumpkin speak
+         **/
+        function squack(speech){
+            const speechbub = document.getElementById('speech-result');
+
+
+            speechbub.textContent = speech
+            speechbub.classList.add('show-text');
+
+            if(canPlayAudio){
+                speechSynth.speak(new SpeechSynthesisUtterance(speech));
+            }
+        }
+
+    </script>
+</body>
+</html>
