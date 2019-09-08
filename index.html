@@ -309,6 +309,7 @@
 
                     };
                 }catch(e){ // already started, try again
+                    console.log(e);
                     window.setTimeout(1000, startSpeechRecognition);
                 }
 
@@ -327,8 +328,6 @@
                 };
             }catch(e){
                 squack('Sorry, speech recognition is not available for this browser');
-
-
             }
         }
 
