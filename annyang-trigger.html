@@ -327,9 +327,11 @@
                     console.log('sound detected');
                 });
                 annyang.addCallback('result', function(e){
+                    console.log('res cb:');
                     console.log(e);
                 });
                 annyang.addCallback('resultMatch', function(userSaid, commandText, phrases) {
+                    console.log('res match!');
 
                     if(userSaid.toLowerCase() === 'pumpkin'){
                         vuiTriggered = true;
@@ -339,18 +341,16 @@
                 });
 
                 annyang.addCallback('resultNoMatch', function(phrases) {
+                    console.log('res no match!');
+
                     if(vuiTriggered){
                         endTriggerPhase(phrases[0], false);
                     }
                 });
 
-
                 annyang.addCallback('end', function() {
-
                     vuiActive = false;
-
-
-                    console.log(`end ev - vuiactive = ${vuiActive}, vuiTriggered = ${vuiTriggered}`);
+                    console.log(`user stopped talking - vuiactive = ${vuiActive}, vuiTriggered = ${vuiTriggered}`);
                 });
 
                 squack('Say "Pumpkin" to start');
@@ -380,12 +380,13 @@
 
             window.setTimeout(function endListenState(){
                 if(!vuiActive && vuiTriggered){
-                    endTriggerPhase('');
+                    endTriggerPhase('timeout');
                 }
-            }, 2000);
+            }, 5000);
         }
 
         function endTriggerPhase(speech = '', goodResult = false){
+            console.log(speech);
             console.log(`end trigger phase - vuiactive = ${vuiActive}, vuiTriggered = ${vuiTriggered}`);
 
             if(vuiActive || (!vuiActive && vuiTriggered)){
@@ -395,8 +396,12 @@
 
                     const commands = Object.keys(additionalCommands);
                     annyang.removeCommands(commands);
-                    document.getElementById('parrot').classList.remove('active');
-                    squack('Say "Pumpkin" to start', false);
+
+                    window.setTimeout(function resetParrot(){
+
+                        document.getElementById('parrot').classList.remove('active');
+                        squack('Say "Pumpkin" to start', false);
+                    }, 2000);
 
                 }
 
