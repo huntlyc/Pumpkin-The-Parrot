@@ -123,7 +123,14 @@
             width: 100%;
             max-width: 320px;
             height: auto;
+            opacity: 0.2;
+            transition: opacity 0.1s ease;
         }
+
+        #parrot.active{
+            opacity: 1;
+        }
+
 
         #speaker{
             position: fixed;
@@ -209,8 +216,8 @@
 </head>
 <body>
     <header>
-        <h1>Pumpkin the Parrot v2.0</h1>
-        <p>Will respond to a few questions</p>
+        <h1>Pumpkin the Parrot v2.5</h1>
+        <p>Will respond to a few questions, triggered by saying "Pumpkin"</p>
     </header>
 
     <main>
@@ -249,6 +256,37 @@
     <script>
         let speechSynth;
         let canPlayAudio = false;
+        let vuiActive, vuiTriggered = false; // active when passively listening, triggered when keyword spoken
+
+        const triggerCommand = {
+            "Pumpkin": triggerPumpkin
+        };
+
+        const additionalCommands = {
+            "what's your name": function(){
+                squack('My name is pumpkin!');
+            },
+            "what's your age": function(){
+                squack('I am 3.14 years old!');
+            },
+            "what's your favourite :thing": function(thing){
+                switch(thing){
+                    case 'pizza':
+                        squack('Chilli Cheese!')
+                        break;
+                    case 'ice-cream':
+                    case 'ice cream':
+                        squack('mango!')
+                        break;
+                    case 'drink':
+                        squack('Pumpkin spiced latte, obviously!')
+                        break;
+                }
+            },
+            "what can I ask you": function(){
+                squack('You can ask me: what\'s my name?  What\'s my age? What\'s my favourite pizza/ice cream/drink');
+            },
+        };
 
         /**
          * We can only play audio to the user if they wish to have it.
@@ -281,38 +319,41 @@
             speechSynth = window.speechSynthesis;
 
             if(annyang){
-
-                const commands = {
-                    "what's your name": function(){
-                        squack('My name is pumpkin!');
-                    },
-                    "what's your age": function(){
-                        squack('I am 3.14 years old!');
-                    },
-                    "what's your favourite :thing": function(thing){
-                        switch(thing){
-                            case 'pizza':
-                                squack('Chilli Cheese!')
-                                break;
-                            case 'ice-cream':
-                            case 'ice cream':
-                                squack('mango!')
-                                break;
-                            case 'drink':
-                                squack('Pumpkin spiced latte, obviously!')
-                                break;
-                        }
-                    },
-
-                }
                 annyang.start();
                 annyang.debug(true);
-                annyang.addCommands(commands);
+                annyang.addCommands(triggerCommand);
+                annyang.addCallback('soundstart', function() {
+                    vuiActive = true;
+                    console.log('sound detected');
+                });
                 annyang.addCallback('result', function(e){
                     console.log(e);
-                })
+                });
+                annyang.addCallback('resultMatch', function(userSaid, commandText, phrases) {
 
-                squack('You can ask me: what\'s my name?  What\'s my age? What\'s my favourite pizza/ice cream/drink');
+                    if(userSaid.toLowerCase() === 'pumpkin'){
+                        vuiTriggered = true;
+                    }else if(vuiTriggered){
+                        endTriggerPhase(userSaid, true);
+                    }
+                });
+
+                annyang.addCallback('resultNoMatch', function(phrases) {
+                    if(vuiTriggered){
+                        endTriggerPhase(phrases[0], false);
+                    }
+                });
+
+
+                annyang.addCallback('end', function() {
+
+                    vuiActive = false;
+
+
+                    console.log(`end ev - vuiactive = ${vuiActive}, vuiTriggered = ${vuiTriggered}`);
+                });
+
+                squack('Say "Pumpkin" to start');
             }else{
                 squack('Sorry, speech recognition is not available for this browser');
             }
@@ -324,7 +365,6 @@
         function squack(speech){
             const speechbub = document.getElementById('speech-result');
 
-
             speechbub.textContent = speech
             speechbub.classList.add('show-text');
 
@@ -332,6 +372,34 @@
                 speechSynth.speak(new SpeechSynthesisUtterance(speech));
             }
         }
+
+        //
+        function triggerPumpkin(){
+            document.getElementById('parrot').classList.add('active');
+            annyang.addCommands(additionalCommands);
+
+            window.setTimeout(function endListenState(){
+                if(!vuiActive && vuiTriggered){
+                    endTriggerPhase('');
+                }
+            }, 2000);
+        }
+
+        function endTriggerPhase(speech = '', goodResult = false){
+            console.log(`end trigger phase - vuiactive = ${vuiActive}, vuiTriggered = ${vuiTriggered}`);
+
+            if(vuiActive || (!vuiActive && vuiTriggered)){
+                vuiActive = false;
+                if(vuiTriggered){
+                    vuiTriggered = false;
+
+                    const commands = Object.keys(additionalCommands);
+                    annyang.removeCommands(commands);
+                }
+
+            }
+        }
+
     </script>
 </body>
 </html>
