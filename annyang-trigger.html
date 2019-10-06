@@ -362,13 +362,13 @@
         /**
          * Makes pumpkin speak
          **/
-        function squack(speech){
+        function squack(speech, speakToUser = true){
             const speechbub = document.getElementById('speech-result');
 
             speechbub.textContent = speech
             speechbub.classList.add('show-text');
 
-            if(canPlayAudio){
+            if(speakToUser && canPlayAudio){
                 speechSynth.speak(new SpeechSynthesisUtterance(speech));
             }
         }
@@ -395,6 +395,9 @@
 
                     const commands = Object.keys(additionalCommands);
                     annyang.removeCommands(commands);
+                    document.getElementById('parrot').classList.remove('active');
+                    squack('Say "Pumpkin" to start', false);
+
                 }
 
             }
